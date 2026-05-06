@@ -23,18 +23,9 @@ SHORT_PROMPTS = [
 ]
 
 LONG_CONTEXT = """
-You are a model-serving expert. Below is documentation about KV cache memory layouts:
-PagedAttention (vLLM, 2023) treats the KV cache like virtual-memory pages so that
-sequences don't need a contiguous physical block. Before it, ~60-80% of GPU memory
-was wasted on internal fragmentation when sequences had variable length. RadixAttention
-(SGLang, 2024) extends this idea by storing the KV cache in a radix tree keyed by
-token sequence, so a cache hit on a shared prefix lets the engine skip prefill
-entirely. vLLM v1 (Jan 2025) ships Automatic Prefix Caching (APC) on by default and
-unifies the memory pool used for activations and KV. Disaggregated prefill/decode
-(Mooncake, llm-d, NVIDIA Dynamo, 2025) runs the prefill phase on a dedicated GPU
-pool and streams the resulting KV across NVLink/InfiniBand to a separate decode pool,
-because prefill is compute-bound and decode is memory-bandwidth-bound and contend on
-the same GPU when colocated.
+PagedAttention stores KV cache in pages to reduce memory fragmentation.
+RadixAttention reuses shared prefixes to skip repeated prefill work.
+Goodput@SLO focuses on requests meeting latency targets, not peak throughput.
 """.strip()
 
 LONG_PROMPTS = [
@@ -50,7 +41,7 @@ class LlamaServerUser(HttpUser):
     @task(4)
     def short_prompt(self):
         msg = random.choice(SHORT_PROMPTS)
-        self._chat([{"role": "user", "content": msg}], max_tokens=80, name="short")
+        self._chat([{"role": "user", "content": msg}], max_tokens=12, name="short")
 
     @task(1)
     def long_prompt_rag(self):
@@ -59,7 +50,7 @@ class LlamaServerUser(HttpUser):
             {"role": "system", "content": "You answer using the document provided."},
             {"role": "user", "content": LONG_CONTEXT + "\n\nQuestion: " + msg},
         ]
-        self._chat(messages, max_tokens=160, name="long-rag")
+        self._chat(messages, max_tokens=20, name="long-rag")
 
     def _chat(self, messages, max_tokens: int, name: str) -> None:
         self.client.post(
@@ -70,6 +61,6 @@ class LlamaServerUser(HttpUser):
                 "max_tokens": max_tokens,
                 "temperature": 0.5,
             },
-            timeout=120,
+            timeout=30,
             name=name,
         )

@@ -1,0 +1,27 @@
+[
+  {
+    "threads": 1,
+    "ttft_ms": 213.5,
+    "decode_tok_s": 12.04
+  },
+  {
+    "threads": 2,
+    "ttft_ms": 192.4,
+    "decode_tok_s": 15.12
+  },
+  {
+    "threads": 4,
+    "ttft_ms": 199.3,
+    "decode_tok_s": 14.34
+  },
+  {
+    "threads": 8,
+    "ttft_ms": 204.7,
+    "decode_tok_s": 10.57
+  },
+  {
+    "threads": 12,
+    "ttft_ms": 224.1,
+    "decode_tok_s": 8.26
+  }
+]

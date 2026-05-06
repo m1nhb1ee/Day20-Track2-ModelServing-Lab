@@ -72,3 +72,22 @@ _Two-to-three sentences. Be specific: what change, what the before/after numbers
 ## Notes / pitfalls / things you'd do differently
 
 (Free-form. The most useful section for the grader.)
+
+## Filled bonus result - CPU fallback thread sweep
+
+CPU fallback bonus was run with `llama-cpp-python` because native `llama.cpp`
+builds were blocked by the Windows CUDA/toolchain setup on this machine.
+
+| threads | TTFT (ms) | decode (tok/s) |
+|--:|--:|--:|
+| 1 | 219.1 | 12.30 |
+| 2 | 219.7 | 14.92 |
+| 4 | 232.2 | 12.62 |
+| 8 | 256.6 | 7.95 |
+| 12 | 274.6 | 6.33 |
+
+The best change was reducing decode threads from `8` to `2`. Decode improved
+from `7.95 tok/s` to `14.92 tok/s`, about `1.88x` faster than the original
+8-thread setting. More threads were not better on this CPU fallback path;
+memory bandwidth, cache locality, and scheduling overhead dominated the decode
+loop, so using fewer threads gave higher per-token throughput.

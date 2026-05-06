@@ -74,8 +74,8 @@ def call_llm(messages: list[dict]) -> tuple[str, float]:
     t0 = time.perf_counter()
     r = httpx.post(
         f"{LLAMA_SERVER_BASE}/chat/completions",
-        json={"model": "local", "messages": messages, "max_tokens": 200, "temperature": 0.3},
-        timeout=120.0,
+        json={"model": "local", "messages": messages, "max_tokens": 48, "temperature": 0.3},
+        timeout=180.0,
     )
     r.raise_for_status()
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
